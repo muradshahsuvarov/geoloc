@@ -8,9 +8,13 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 type server struct{}
+
+// Define a mutex to synchronize access to the cache map
+var cacheMutex sync.Mutex
 
 // getContent fetches data from the Overpass API based on the specified parameters.
 func getContent(radius string, LAT float64, LNG float64, keyInput string, valueInput string) ([]byte, error) {
@@ -163,20 +167,31 @@ func getLatLon(locJSON string) (float64, float64) {
 // getNearbyPlaces is a function that takes in user's key and value input as well as a radius, gets the user's latitude and longitude using
 // the Google Geocoding API, and uses these values to make a request to the Google Places API to get nearby places. It then returns the
 // response data as a string.
-func getNearbyPlaces(keyInput, valueInput string, radius int64) string {
+func getNearbyPlaces(key string, value string, radius int64) string {
+	// Check if the data is already cached
+	cacheKey := fmt.Sprintf("%s_%s_%d", key, value, radius)
+	cacheMutex.Lock()
+	if data, ok := cache[cacheKey]; ok {
+		cacheMutex.Unlock()
+		return data
+	}
+	cacheMutex.Unlock()
 
-	// get latitude and longitude from Google Geocoding API
-	var lat, lng = getLatLon(getLatLonJSON())
-	fmt.Printf("LAT: %v\nLNG: %v", lat, lng)
-
-	// get XML data from server using latitude, longitude, key, and value inputs
-	data, err := getContent(fmt.Sprintf("%v", radius), lat, lng, keyInput, valueInput)
+	// If the data is not cached, fetch it from the Overpass API
+	LAT, LNG := getLatLon()
+	data, err := getContent(strconv.FormatInt(radius, 10), LAT, LNG, key, value)
 	if err != nil {
-		log.Printf("Failed to get XML: %v", err)
+		log.Printf("Error getting content: %v", err)
 		return ""
 	}
 
-	return string(data)
+	// Convert the response data to a string and cache it
+	places := string(data)
+	cacheMutex.Lock()
+	cache[cacheKey] = places
+	cacheMutex.Unlock()
+
+	return places
 }
 
 // main function runs the HTTP server to listen on incoming requests on port 8081
