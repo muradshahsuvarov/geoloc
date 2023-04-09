@@ -198,7 +198,7 @@ func getNearbyPlaces(key string, value string, radius int64) string {
 func main() {
 
 	s := &server{} // TO RUN THE SERVER TO HAVE HTTP REQUESTS FROM OUTSIDE (E.G POSTMAN)
-	http.Handle("/location-api/", s)
+	http.Handle("/geoloc/", s)
 	log.Fatal(http.ListenAndServe(":8081", nil))
 
 }
