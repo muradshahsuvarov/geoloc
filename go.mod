@@ -1,3 +1,3 @@
-module booking-app
+module geoloc
 
 go 1.20
