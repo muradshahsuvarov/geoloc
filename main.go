@@ -78,7 +78,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // For getting the latitude and longitude as JSON from GOOGLE GEOCODING API request
 func getLatLonJSON() string {
 	// POST REQUEST TO GOOGLE GEOCODING API WITH API KEY
-	url := "<GOOGLE MAP ENDPOINT WITH AN API KEY>"
+	url := "https://www.googleapis.com/geolocation/v1/geolocate?key=YOUR_API_KEY"
 
 	var jsonStr = []byte(``)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
